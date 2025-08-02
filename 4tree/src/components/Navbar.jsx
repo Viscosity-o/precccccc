@@ -1,5 +1,7 @@
 import React from "react";
 import "./Navbar.css"; // Link to external CSS
+import { Link } from "react-router-dom";
+
 
 const Navbar = () => {
   const toggleMobileMenu = () => {
@@ -75,7 +77,7 @@ const Navbar = () => {
 
         <div className="mobile-menu" id="mobileMenu">
           <a href="#donate" className="btn btn-donate">Donate</a>
-          <a href="#signin" className="btn btn-signin">Sign In</a>
+         <a href="#signin" className="btn btn-signin">Sign In</a>
         </div>
       </nav>
 
