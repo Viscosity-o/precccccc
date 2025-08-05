@@ -63,8 +63,8 @@ const Navbar = () => {
         </div>
 
         <div className="nav-buttons">
-          <a href="#donate" className="btn btn-donate">Donate</a>
-          <a href="#signin" className="btn btn-signin">Sign In</a>
+          <Link to="/donate" className="btn btn-donate">Donate</Link>
+          <Link to="/signup" className="btn btn-signin">Sign In</Link>
         </div>
 
         <button className="mobile-menu-btn" onClick={toggleMobileMenu}>
@@ -76,8 +76,8 @@ const Navbar = () => {
         </button>
 
         <div className="mobile-menu" id="mobileMenu">
-          <a href="#donate" className="btn btn-donate">Donate</a>
-         <a href="#signin" className="btn btn-signin">Sign In</a>
+          <Link to="/donate" className="btn btn-donate">Donate</Link>
+          <Link to="/signup" className="btn btn-signin">Sign In</Link>
         </div>
       </nav>
 

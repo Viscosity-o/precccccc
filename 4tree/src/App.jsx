@@ -16,7 +16,13 @@ import Signup from "./pages/Signup";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Home />,
+    element:
+    <div>
+      <Navbar/>
+      <Home />,
+      <Footer/>
+    </div>  
+    
   },
   {
     path: "/login",
@@ -27,16 +33,28 @@ const router = createBrowserRouter([
     element: <Signup />,
   },
   {
-    path: "/user-dashboard",
-    element: <UserDashboard />,
+    path: "/dashboard",
+    element:<div>
+      <Navbar/>
+      <UserDashboard />,
+      <Footer/>
+    </div>  
   },
   {
     path: "/admin-dashboard",
-    element: <AdminDashboard />,
+    element: <div>
+      <Navbar/>
+      <AdminDashboard />,
+      <Footer/>
+    </div>  
   },
   {
     path: "/ngo-dashboard",
-    element: <NgoDashboard />,
+    element: <div>
+      <Navbar/>
+      <NgoDashboard />,
+      <Footer/>
+    </div>  
   },
   {
     path: "*",
@@ -52,9 +70,8 @@ function App() {
 
     
     <div>
-      <Navbar /> {/* Navbar component render ho raha hai */}
-      <Home />
-      <Footer />
+      <RouterProvider router={router}/>
+      
     </div>
   );
 }
