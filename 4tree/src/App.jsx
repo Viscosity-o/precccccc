@@ -12,7 +12,8 @@ import UserDashboard from "./pages/dashboard/UserDashboard";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import NgoDashboard from "./pages/dashboard/NgoDashboard";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import Signup from "./pages/Signup"
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -33,9 +34,9 @@ const router = createBrowserRouter([
     element: <Signup />,
   },
   {
-    path: "/dashboard",
+    path: "/dashboard/:slug",
     element:<div>
-      <Navbar/>
+      
       <UserDashboard />,
       <Footer/>
     </div>  

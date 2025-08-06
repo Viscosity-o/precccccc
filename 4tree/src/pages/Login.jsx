@@ -49,7 +49,7 @@ function Login() {
         } else {
           sessionStorage.setItem("authToken", response.token);
         }
-        
+
         // Redirect to dashboard or home page
         navigate("/dashboard");
       } else {
@@ -89,10 +89,12 @@ function Login() {
         throw new Error(errorData.detail || "Login failed");
       }
 
-      const data= await response.json();
-      alert(`Welcome ${data.user.name}! 🎉`);
+      const data = await response.json();
+      alert(`Welcome ${data.user.name}! how are u bufdfy 🎉`);
       // Redirect to login or dashboard
-      window.location.href = "/dashboard";
+      console.log("Redirecting to: ", `/dashboard/${data.user.slug}`);
+
+      window.location.href = `/dashboard/${data.user.slug}`;
     } catch (error) {
       throw error;
     }
@@ -118,14 +120,14 @@ function Login() {
     try {
       // Redirect to Django's OAuth endpoint
       window.location.href = `/api/auth/social/login/${provider}/`;
-      
+
       // Alternatively, you can open a popup window for OAuth flow
       // const popup = window.open(
       //   `/api/auth/social/login/${provider}/`,
       //   "SocialLogin",
       //   "width=600,height=600"
       // );
-      
+
       // Listen for message from popup (if using that approach)
       // window.addEventListener("message", (event) => {
       //   if (event.data.type === "social-login-success") {
@@ -232,16 +234,16 @@ function Login() {
 
           <div className="form-options">
             <div className="remember-me">
-              <input 
-                type="checkbox" 
-                id="remember" 
+              <input
+                type="checkbox"
+                id="remember"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
               />
               <label htmlFor="remember">Remember me</label>
             </div>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="forgot-password"
               onClick={handleForgotPassword}
             >
@@ -249,8 +251,8 @@ function Login() {
             </button>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="login-button"
             disabled={loading}
           >
@@ -263,8 +265,8 @@ function Login() {
         </div>
 
         <div className="social-login">
-          <button 
-            className="social-button" 
+          <button
+            className="social-button"
             onClick={() => socialLogin("google")}
             disabled={loading}
           >
@@ -275,8 +277,8 @@ function Login() {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
           </button>
-          <button 
-            className="social-button" 
+          <button
+            className="social-button"
             onClick={() => socialLogin("facebook")}
             disabled={loading}
           >

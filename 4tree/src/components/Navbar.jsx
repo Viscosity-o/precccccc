@@ -64,7 +64,7 @@ const Navbar = () => {
 
         <div className="nav-buttons">
           <Link to="/donate" className="btn btn-donate">Donate</Link>
-          <Link to="/signup" className="btn btn-signin">Sign In</Link>
+          <Link to="/login" className="btn btn-signin">Sign In</Link>
         </div>
 
         <button className="mobile-menu-btn" onClick={toggleMobileMenu}>
