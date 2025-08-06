@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'auther',
     'userfuncs',
+    'ngofunc',
     'rest_framework',
     'rest_framework.authtoken'
 ]

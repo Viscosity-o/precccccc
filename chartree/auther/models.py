@@ -17,3 +17,4 @@ class customuser(AbstractUser):
 class ngo(models.Model):
     user= models.OneToOneField(customuser, on_delete=models.CASCADE, primary_key=True)
     ngoid = models.CharField(max_length=100, blank=True, null=True)
+    address= models.CharField(max_length=255, blank=True, null=True)

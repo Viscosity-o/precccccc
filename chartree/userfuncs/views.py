@@ -17,66 +17,81 @@ from userfuncs.models import donation
 from datetime import date
 
 @api_view(['GET'])
-def get_user_by_slug(request, slug):
+@permission_classes([AllowAny])
+def get_everything(request, slug):
     try:
-        user = customuser.objects.filter(userslug=slug).first()
+
+    #     {
+    #   id: 3,
+    #   categories: ["Toys", "Books"],
+    #   condition: "Good",
+    #   quantity: 8,
+    #   description: "Children's toys and picture books",
+    #   status: "Rejected",
+    #   submissionDate: "2024-01-12",
+    #   preferredLocation: "eastside",
+    #   rejectionReason: "Items not suitable for current programs",
+    #   photos: ["🧸", "📖"]
+    # }
+    #
+
+        user = customuser.objects.filter(slug=slug).first()
+        donations=donation.objects.filter(user=user)
+        pendingApproval=donation.objects.filter(user=user,verified="Pending").count()
+        acceptedDonations=donation.objects.filter(user=user,verified="Approved").count()
+        dlist=[]
+        for d in donations:
+            dobject={}
+            dobject['id']=d.id
+            dobject['categories']=d.tag
+            dobject['quantity']=d.quantity
+            dobject['description']=d.description
+            dobject['status']=d.verified
+            dobject['submissionDate']=d.submittedon
+            if d.verified=="Approved":
+                dobject["dropOffLocation"]=d.ngo.address
+            if d.verified=="Rejected":
+                dobject["rejectionReason"]=d.rejectionReason
+            dlist.append(dobject)
+
         return Response({
-            'userslug': user.userslug,
-            'username': user.username
+            'userslug': user.slug,
+            'username': user.username,
+            'donations':dlist,
+            'pendingApproval':pendingApproval,
+            "acceptedDonations":acceptedDonations
         })
     except customuser.DoesNotExist:
         return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def donate(request):
-    pass
+    try:
+        # Access form data
+        photos = request.FILES.get('photos')
+        category = request.data.get('category')
+       
+        quantity = request.data.get('quantity')
+        description = request.data.get('description')
+        title = request.data.get('title')
+        slug = request.data.get('slug')
+        user=customuser.objects.filter(slug=slug).first()
+        
+        # Validate required fields
+        if not all([photos, category, quantity, description]):
+            return Response(
+                {'error': 'Missing required fields'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        Donation=donation.objects.create(tag=category,title=title,image=photos,quantity=quantity,user=user,verified="Pending",donated=False,recieved=False,submittedon=date.today(),description=description)
+        return Response({'message': 'Donation submitted successfully'}, status=201)
 
-#     try:
-#         # Handle file uploads
-#         photos = request.FILES.getlist('photos')
-        
-#         # Process form data
-#         title = request.POST.get('title')
-#         description = request.POST.get('description')
-#         quantity = request.POST.get('quantity')
-#         contact_method = request.POST.get('contact_method')
-#         availability = request.POST.get('availability')
-#         category = request.POST.get('category')
-        
-#         # Validate required fields
-#         if not all([title, description, quantity, category]) or not photos:
-#             return JsonResponse(
-#                 {'error': 'Missing required fields'}, 
-#                 status=400
-#             )
-        
-#         # Save files (example)
-#         # photo_paths = []
-#         # for photo in photos:
-#         #     path = default_storage.save(f'donations/{photo.name}', photo)
-#         #     photo_paths.append(path)
-        
-#         Donation=donation.objects.create(tag=category,title=title,quantity=quantity,submittedon=date.today,description=description,)
-        
-#         # Return success response
-#         return JsonResponse({
-#             'id': 1,  # Replace with actual ID from DB
-#             'title': title,
-#             'description': description,
-#             'quantity': quantity,
-#             'category': category,
-#             'photos': photo_paths,
-#             'status': 'pending',
-#             'submitted_at': datetime.now().isoformat(),
-#             'message': 'Donation created successfully'
-#         }, status=201)
-        
-#     except Exception as e:
-#         return JsonResponse(
-#             {'error': str(e)}, 
-#             status=500
-#         )
-# Create your views here.
+
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

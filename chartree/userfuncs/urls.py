@@ -4,8 +4,8 @@ from . import views
 
 
 urlpatterns = [
-    path('api/user/<slug:slug>/', views.get_user_by_slug, name='get_user_by_slug'),
-    path("api/userfuncs/donate",views.donate,name="donate"),
+    path('api/user/<slug:slug>/', views.get_everything, name='get_user_by_slug'),
+    path("api/donations/",views.donate,name="donate"),
     
 
     

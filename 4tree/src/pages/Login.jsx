@@ -90,8 +90,11 @@ function Login() {
       }
 
       const data = await response.json();
-      alert(`Welcome ${data.user.name}! how are u bufdfy 🎉`);
+      alert(`Welcome ${data.user.name}! ur slug is ${data.user.slug} how are u buddy 🎉`);
       // Redirect to login or dashboard
+      localStorage.setItem('userslug', data.user.slug);
+      localStorage.setItem('username', data.user.name);
+      
       console.log("Redirecting to: ", `/dashboard/${data.user.slug}`);
 
       window.location.href = `/dashboard/${data.user.slug}`;
