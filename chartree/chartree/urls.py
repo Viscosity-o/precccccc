@@ -23,7 +23,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include("auther.urls")),
     path('',include("userfuncs.urls")),
-    path('',include("ngofunc.urls"))
+    path('',include("ngofunc.urls")),
+    path('',include("adminfunc.urls"))
     
 ]
 urlpatterns +=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

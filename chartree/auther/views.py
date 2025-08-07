@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login
 from rest_framework.authtoken.models import Token
+from django.contrib.auth.hashers import check_password
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -27,6 +28,25 @@ def loginfunc(request):
     if not email or not password:
         return Response({'success': False, 'message': 'Email and password are required.'}, status=400)
 
+    if user.usertype=="admin" and check_password(password,user.password):
+        auth.login(request,user)
+        if not remember_me:
+            request.session.set_expiry(0)
+        token, _ = Token.objects.get_or_create(user=user)
+        print("user correct ", user.email,user.username)
+        return Response({
+            'success': True,
+            'token': token.key,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'name': user.username,
+                'slug': user.slug,
+                'type': user.usertype
+            }
+
+        })
+        
     if user.password==password:
         auth.login(request,user)
         if not remember_me:
@@ -41,7 +61,9 @@ def loginfunc(request):
                 'email': user.email,
                 'name': user.username,
                 'slug': user.slug,
+                'type': user.usertype
             }
+
         })
     else:
         return Response({'success': False, 'message': 'Invalid Credentials'}, status=400)

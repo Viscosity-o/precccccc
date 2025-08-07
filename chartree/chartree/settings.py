@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'auther',
     'userfuncs',
     'ngofunc',
+    'adminfunc',
     'rest_framework',
     'rest_framework.authtoken'
 ]

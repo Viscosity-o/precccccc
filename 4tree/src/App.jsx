@@ -42,7 +42,7 @@ const router = createBrowserRouter([
     </div>  
   },
   {
-    path: "/admin-dashboard",
+    path: "/admin-dashboard/:slug",
     element: <div>
       <Navbar/>
       <AdminDashboard />,
@@ -50,7 +50,7 @@ const router = createBrowserRouter([
     </div>  
   },
   {
-    path: "/ngo-dashboard",
+    path: "/ngo-dashboard/:slug",
     element: <div>
       <Navbar/>
       <NgoDashboard />,

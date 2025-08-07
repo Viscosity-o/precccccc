@@ -97,7 +97,16 @@ function Login() {
       
       console.log("Redirecting to: ", `/dashboard/${data.user.slug}`);
 
-      window.location.href = `/dashboard/${data.user.slug}`;
+      if(data.user.type==='admin'){
+        window.location.href = `/admin-dashboard/${data.user.slug}`;
+      }
+      else if( data.user.type==="ngo"){
+        window.location.href = `/ngo-dashboard/${data.user.slug}`;
+      }
+      else{
+        window.location.href = `/dashboard/${data.user.slug}`;
+      }
+      
     } catch (error) {
       throw error;
     }

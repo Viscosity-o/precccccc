@@ -43,6 +43,7 @@ def get_everything(request, slug):
         for d in donations:
             dobject={}
             dobject['id']=d.id
+            dobject['title']=d.title
             dobject['categories']=d.tag
             dobject['quantity']=d.quantity
             dobject['description']=d.description
