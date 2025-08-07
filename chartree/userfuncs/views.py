@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate, login
 from rest_framework.authtoken.models import Token
-from userfuncs.models import donation
+from userfuncs.models import donation,notification
 from datetime import date
 
 @api_view(['GET'])
@@ -49,10 +49,7 @@ def get_everything(request, slug):
             dobject['description']=d.description
             dobject['status']=d.verified
             dobject['submissionDate']=d.submittedon
-            if d.verified=="Approved":
-                dobject["dropOffLocation"]=d.ngo.address
-            if d.verified=="Rejected":
-                dobject["rejectionReason"]=d.rejectionReason
+          
             dlist.append(dobject)
 
         return Response({
@@ -96,3 +93,23 @@ def donate(request):
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+    
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def getnotis(request,slug):
+    
+    user=customuser.objects.filter(slug=slug).first()
+    
+    notis=notification.objects.filter(user=user)
+    
+    rlist=[]
+    for r in notis:
+        robj={}
+        robj["message"]=r.message
+        robj['title']=r.title
+        robj['type']=r.type
+        rlist.append(robj)
+    return Response({
+        'notilist': rlist 
+    })
+

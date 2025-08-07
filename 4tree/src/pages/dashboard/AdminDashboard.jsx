@@ -12,46 +12,77 @@ const AdminDashboard = () => {
     approvedNgos: 0,
     totalRequests: 0
   });
+  const [reqs, setReqData] = useState([]);
+  const [appreqs,setAppReqData]=useState([])
 
   // Django API base URL - adjust according to your Django setup
   const API_BASE_URL = 'http://localhost:8000/api';
 
-  // Fetch NGOs from Django backend
-  const fetchNgos = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/ngos/`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`, // If using JWT
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setNgos(data);
-        updateStats(data);
-      } else {
-        console.error('Failed to fetch NGOs');
-      }
-    } catch (error) {
-      console.error('Error fetching NGOs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
+  // Fetch NGOs from Django backend
+  // const fetchNgos = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await fetch(`${API_BASE_URL}/ngos/`, {
+  //       method: 'GET',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': `Bearer ${localStorage.getItem('token')}`, // If using JWT
+  //       },
+  //     });
+
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setNgos(data);
+  //       updateStats(data);
+  //     } else {
+  //       console.error('Failed to fetch NGOs');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching NGOs:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // CSRF Token Helper Function
+  function getCSRFToken() {
+    const cookieValue = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+    return cookieValue;
+  }
+
+  
   // Create new NGO
   const createNgo = async (ngoData) => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/ngos/`, {
+
+
+      const response = await fetch('http://localhost:8000/api/auth/ngologin/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'X-CSRFToken': getCSRFToken(),
         },
+
         body: JSON.stringify(ngoData),
       });
 
@@ -73,24 +104,25 @@ const AdminDashboard = () => {
   };
 
   // Update NGO status (approve/reject)
-  const updateNgoStatus = async (ngoId, status, rejectionReason = null) => {
+  const updateNgoStatus = async (reqid, status, rejectionReason = null) => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/ngos/${ngoId}/`, {
-        method: 'PATCH',
+      const response = await fetch(`http://localhost:8000/api/changerequests/`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'X-CSRFToken': getCSRFToken(),
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status,
-          rejection_reason: rejectionReason 
+          rejection_reason: rejectionReason,
+          reqid,
         }),
       });
 
       if (response.ok) {
         const updatedNgo = await response.json();
-        setNgos(prev => prev.map(ngo => 
+        setNgos(prev => prev.map(ngo =>
           ngo.id === ngoId ? updatedNgo : ngo
         ));
         updateStats(ngos.map(ngo => ngo.id === ngoId ? updatedNgo : ngo));
@@ -132,13 +164,19 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
-
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
   // Update statistics
   const updateStats = (ngoList) => {
     const totalNgos = ngoList.length;
     const pendingApprovals = ngoList.filter(ngo => ngo.status === 'pending').length;
     const approvedNgos = ngoList.filter(ngo => ngo.status === 'approved').length;
-    
+
     setStats({
       totalNgos,
       pendingApprovals,
@@ -150,19 +188,21 @@ const AdminDashboard = () => {
   // Handle form submission
   const handleNgoSubmit = async (event) => {
     event.preventDefault();
-    
+
     const formData = new FormData(event.target);
     const ngoData = {
       name: formData.get('ngoName'),
       mobile: formData.get('mobile'),
       email: formData.get('email'),
-      city: formData.get('city'),
+      city: formData.get('location'),
       address: formData.get('address'),
+      password: formData.get('password'),
+      ngoid: formData.get('ngoid'),
       status: 'pending'
     };
 
     const result = await createNgo(ngoData);
-    
+
     if (result.success) {
       event.target.reset();
       alert(`🎉 NGO "${result.data.name}" has been registered successfully!\n\nYour registration is now pending admin approval. You will receive an email confirmation once approved.\n\nThank you for joining the EcoConnect platform! 🌟`);
@@ -171,26 +211,29 @@ const AdminDashboard = () => {
     }
   };
 
+
   // Handle NGO approval
-  const handleApproveNgo = async (ngoId) => {
-    const result = await updateNgoStatus(ngoId, 'approved');
-    
+  const handleApproveReq = async (ngoId) => {
+    const result = await updateNgoStatus(ngoId, 'Approved');
+
     if (result.success) {
       alert(`${result.data.name} has been approved successfully! ✅`);
+      setReqData(prevReqs => prevReqs.filter(req => req.id !== ngoId));
     } else {
       alert(`Error: ${result.error.message || 'Failed to approve NGO'}`);
     }
   };
 
   // Handle NGO rejection
-  const handleRejectNgo = async (ngoId) => {
+  const handleRejectReq = async (ngoId) => {
     const reason = prompt('Please provide a reason for rejection:');
     if (reason) {
       const ngo = ngos.find(n => n.id === ngoId);
-      const result = await updateNgoStatus(ngoId, 'rejected', reason);
-      
+      const result = await updateNgoStatus(ngoId, 'Rejected', reason);
+
       if (result.success) {
         alert(`${ngo.name} has been rejected. Reason: ${reason} ❌`);
+        setReqData(prevReqs => prevReqs.filter(req => req.id !== ngoId));
       } else {
         alert(`Error: ${result.error.message || 'Failed to reject NGO'}`);
       }
@@ -203,18 +246,110 @@ const AdminDashboard = () => {
       localStorage.removeItem('token');
       alert('Thank you for using the EcoConnect NGO Registration Portal! See you soon! 🌟');
       // Redirect to login page or handle logout logic
-      window.location.href = '/login';
+      window.location.href = '/';
     }
   };
 
   // Filter NGOs by status
-  const getPendingNgos = () => ngos.filter(ngo => ngo.status === 'pending');
-  const getApprovedNgos = () => ngos.filter(ngo => ngo.status === 'approved');
 
-  // Load data on component mount
+
+
   useEffect(() => {
-    fetchNgos();
+    async function getPendingRequest() {
+      try {
+
+        const response = await fetch(`http://localhost:8000/api/getrequests/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie('csrftoken'),
+          },
+
+        });
+
+        if (!response.ok) {
+          throw new Error("User not found");
+        }
+
+        const data = await response.json();
+        setReqData(data.pendingrequests);
+
+
+        console.log(data.pendingrequests);
+        setAppReqData(data.pendingrequests)
+      } catch (err) {
+        console.log(err.message);
+      }
+    }
+
+    getPendingRequest();
   }, []);
+
+
+
+  useEffect(() => {
+    async function getstats() {
+      try {
+
+        const response = await fetch(`http://localhost:8000/api/stats/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie('csrftoken'),
+          },
+
+        });
+
+        if (!response.ok) {
+          throw new Error("User not found");
+        }
+
+        const data = await response.json();
+        setStats(data);
+
+
+        console.log(data);
+       
+      } catch (err) {
+        console.log(err.message);
+      }
+    }
+
+    getstats();
+  }, []);
+
+  useEffect(() => {
+    async function getAppRequest() {
+      try {
+
+        const response = await fetch(`http://localhost:8000/api/getapprovedrequests/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie('csrftoken'),
+          },
+
+        });
+
+        if (!response.ok) {
+          throw new Error("User not found");
+        }
+
+        const data = await response.json();
+        setAppReqData(data.apprequests);
+
+
+        console.log(data.apprequests);
+        
+      } catch (err) {
+        console.log(err.message);
+      }
+    }
+
+    getAppRequest();
+  }, []);
+  // Load data on component mount
+
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -270,8 +405,8 @@ const AdminDashboard = () => {
 
               {/* Profile Dropdown */}
               <div className="profile-dropdown-container">
-                <button 
-                  onClick={() => setShowProfileDropdown(!showProfileDropdown)} 
+                <button
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                   className="profile-button"
                 >
                   <svg className="profile-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,7 +455,7 @@ const AdminDashboard = () => {
             <div className="stat-content">
               <div className="stat-info">
                 <p className="stat-label">Total NGOs</p>
-                <p className="stat-value">{stats.totalNgos}</p>
+                <p className="stat-value">{stats.totalNGO}</p>
                 <p className="stat-description blue">Registered organizations</p>
               </div>
               <div className="stat-icon blue">
@@ -336,8 +471,8 @@ const AdminDashboard = () => {
             <div className="stat-content">
               <div className="stat-info">
                 <p className="stat-label">Pending Approvals</p>
-                <p className="stat-value">{stats.pendingApprovals}</p>
-                <p className="stat-description orange">Awaiting review</p>
+                <p className="stat-value">{stats.approvalPending}</p>
+                <p className="stat-description orange">Applications Awaiting review</p>
               </div>
               <div className="stat-icon orange">
                 <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,9 +486,9 @@ const AdminDashboard = () => {
           <div className="stat-card">
             <div className="stat-content">
               <div className="stat-info">
-                <p className="stat-label">Approved NGOs</p>
-                <p className="stat-value">{stats.approvedNgos}</p>
-                <p className="stat-description green">Active organizations</p>
+                <p className="stat-label">Approved Requests</p>
+                <p className="stat-value">{stats.approved}</p>
+                <p className="stat-description green">Requests Available for Donation</p>
               </div>
               <div className="stat-icon green">
                 <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -368,8 +503,8 @@ const AdminDashboard = () => {
             <div className="stat-content">
               <div className="stat-info">
                 <p className="stat-label">Total Requests</p>
-                <p className="stat-value">{stats.totalRequests}</p>
-                <p className="stat-description purple">Active requests</p>
+                <p className="stat-value">{stats.totalreqs}</p>
+                <p className="stat-description purple">Total requests Served</p>
               </div>
               <div className="stat-icon purple">
                 <svg className="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -383,23 +518,23 @@ const AdminDashboard = () => {
         {/* Management Section */}
         <div className="management-section">
           <h2 className="section-title">Admin Management Dashboard</h2>
-          
+
           {/* Tab Navigation */}
           <div className="tab-navigation">
-            <button 
-              onClick={() => setCurrentTab('addNgo')} 
+            <button
+              onClick={() => setCurrentTab('addNgo')}
               className={`tab-button ${currentTab === 'addNgo' ? 'active' : ''}`}
             >
               Add NGO Registration
             </button>
-            <button 
-              onClick={() => setCurrentTab('pendingRequests')} 
+            <button
+              onClick={() => setCurrentTab('pendingRequests')}
               className={`tab-button ${currentTab === 'pendingRequests' ? 'active' : ''}`}
             >
               Pending Requests
             </button>
-            <button 
-              onClick={() => setCurrentTab('approvedRequests')} 
+            <button
+              onClick={() => setCurrentTab('approvedRequests')}
               className={`tab-button ${currentTab === 'approvedRequests' ? 'active' : ''}`}
             >
               Approved Requests
@@ -419,9 +554,9 @@ const AdminDashboard = () => {
                   </p>
                 </div>
 
-                <form 
-                  onSubmit={handleNgoSubmit} 
-                  className="form-container" 
+                <form
+                  onSubmit={handleNgoSubmit}
+                  className="form-container"
                   style={{ background: 'white', padding: '2rem', borderRadius: '0.75rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
                 >
                   <div className="form-group">
@@ -439,11 +574,34 @@ const AdminDashboard = () => {
                       <input type="email" name="email" className="form-input" placeholder="ngo@example.com" required />
                     </div>
                   </div>
-
                   <div className="form-group">
                     <label className="form-label">City *</label>
-                    <input type="text" name="city" className="form-input" placeholder="Enter your city name" required />
+                    <select
+                      id="location"
+                      name="location"
+                      onChange={handleChange}
+                      className="form-input"
+                    >
+                      <option value="">Select your location</option>
+                      <option value="Pune">Pune</option>
+                      <option value="Mumbai">Mumbai</option>
+                      <option value="Delhi">Delhi</option>
+                      <option value="Bengaluru">Bengaluru</option>
+                      <option value="Hyderabad">Hyderabad</option>
+                    </select>
                   </div>
+                  <div className='form-row'>
+
+                    <div className="form-group">
+                      <label className="form-label">Darpan ID *</label>
+                      <input type="tel" name="ngoid" className="form-input" placeholder="DARPAN ID" required />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Password *</label>
+                      <input type="password" name="password" className="form-input" placeholder="NGO Password.." required />
+                    </div>
+
+                  </div >
 
                   <div className="form-group">
                     <label className="form-label">Complete Address *</label>
@@ -460,9 +618,9 @@ const AdminDashboard = () => {
                     </ul>
                   </div>
 
-                  <button 
-                    type="submit" 
-                    className="submit-btn" 
+                  <button
+                    type="submit"
+                    className="submit-btn"
                     style={{ width: '100%', marginTop: '1rem' }}
                     disabled={loading}
                   >
@@ -471,7 +629,7 @@ const AdminDashboard = () => {
                 </form>
 
                 {/* Registered NGOs List */}
-                <div style={{ marginTop: '2rem' }}>
+                {/* <div style={{ marginTop: '2rem' }}>
                   {ngos.length > 0 && (
                     <div style={{ background: 'white', borderRadius: '0.75rem', padding: '1.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}>
                       <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#1f2937', marginBottom: '1.5rem' }}>
@@ -479,12 +637,12 @@ const AdminDashboard = () => {
                       </h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {ngos.map(ngo => (
-                          <div 
-                            key={ngo.id} 
-                            style={{ 
-                              border: '1px solid #e5e7eb', 
-                              borderRadius: '0.5rem', 
-                              padding: '1.5rem', 
+                          <div
+                            key={ngo.id}
+                            style={{
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '0.5rem',
+                              padding: '1.5rem',
                               borderLeft: `4px solid ${ngo.status === 'pending' ? '#f59e0b' : '#10b981'}`
                             }}
                           >
@@ -496,11 +654,11 @@ const AdminDashboard = () => {
                                 <p style={{ color: '#4b5563', margin: '0.25rem 0', fontSize: '0.875rem' }}>🏙️ {ngo.city}</p>
                                 <p style={{ color: '#2563eb', fontWeight: '500', fontSize: '0.875rem' }}>📅 Registered: {new Date(ngo.created_at || Date.now()).toLocaleDateString()}</p>
                               </div>
-                              <span 
-                                style={{ 
-                                  fontSize: '0.75rem', 
-                                  fontWeight: '500', 
-                                  padding: '0.25rem 0.625rem', 
+                              <span
+                                style={{
+                                  fontSize: '0.75rem',
+                                  fontWeight: '500',
+                                  padding: '0.25rem 0.625rem',
                                   borderRadius: '9999px',
                                   backgroundColor: ngo.status === 'approved' ? '#dcfce7' : '#fed7aa',
                                   color: ngo.status === 'approved' ? '#166534' : '#9a3412'
@@ -524,7 +682,7 @@ const AdminDashboard = () => {
                       </div>
                     </div>
                   )}
-                </div>
+                </div> */}
               </div>
             </div>
           )}
@@ -533,7 +691,7 @@ const AdminDashboard = () => {
           {currentTab === 'pendingRequests' && (
             <div className="tab-content">
               <div className="ngo-list">
-                {getPendingNgos().length === 0 ? (
+                {reqs.length === 0 ? (
                   <div className="empty-state">
                     <svg className="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -541,29 +699,44 @@ const AdminDashboard = () => {
                     <p className="empty-text">No pending requests</p>
                   </div>
                 ) : (
-                  getPendingNgos().map(ngo => (
-                    <div key={ngo.id} className="ngo-card pending">
+                  reqs.map(req => (
+                    <div key={req.id} className="ngo-card pending">
                       <div className="ngo-header">
                         <div className="ngo-info">
-                          <h3 className="ngo-name">{ngo.name}</h3>
-                          <p className="ngo-details">📱 {ngo.mobile}</p>
-                          <p className="ngo-details">📧 {ngo.email}</p>
-                          <p className="ngo-details">🏙️ {ngo.city}</p>
-                          <p className="ngo-contact">📅 Registered: {new Date(ngo.created_at || Date.now()).toLocaleDateString()}</p>
+                          <h3 className="ngo-name">{req.title}</h3>
+                          <p className="ngo-details">📱 {req.description}</p>
+                          <p className="ngo-details">📧 {req.user}</p>
+                          <p className="ngo-details">🧾Amount: {req.quantity}</p>
+                          <p className="ngo-contact">📅 Registered: {req.submittedon}</p>
+                          {req.imageurl && (
+                            <img
+                              src={req.imageurl}
+                              alt="Request-Img"
+                              className="ngo-image"
+                              style={{
+                                maxWidth: '100%',
+                                height: 'auto',
+                                borderRadius: '10px',
+                                display: 'block',
+                                marginTop: '10px',
+                                objectFit: 'contain' // or 'cover' if you want cropped, uniform display
+                              }}
+                            />
+                          )}
                         </div>
                         <span className="status-badge orange">Pending</span>
                       </div>
-                      <p className="ngo-address">📍 {ngo.address}</p>
+
                       <div className="ngo-actions">
-                        <button 
-                          onClick={() => handleApproveNgo(ngo.id)} 
+                        <button
+                          onClick={() => handleApproveReq(req.id)}
                           className="approve-btn"
                           disabled={loading}
                         >
                           ✅ Approve
                         </button>
-                        <button 
-                          onClick={() => handleRejectNgo(ngo.id)} 
+                        <button
+                          onClick={() => handleRejectReq(req.id)}
                           className="reject-btn"
                           disabled={loading}
                         >
@@ -581,7 +754,7 @@ const AdminDashboard = () => {
           {currentTab === 'approvedRequests' && (
             <div className="tab-content">
               <div className="ngo-list">
-                {getApprovedNgos().length === 0 ? (
+                {appreqs.length === 0 ? (
                   <div className="empty-state">
                     <svg className="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -589,22 +762,34 @@ const AdminDashboard = () => {
                     <p className="empty-text">No approved NGOs yet</p>
                   </div>
                 ) : (
-                  getApprovedNgos().map(ngo => (
-                    <div key={ngo.id} className="ngo-card approved">
+                  appreqs.map(req => (
+                    <div key={req.id} className="ngo-card approved">
                       <div className="ngo-header">
                         <div className="ngo-info">
-                          <h3 className="ngo-name">{ngo.name}</h3>
-                          <p className="ngo-details">📱 {ngo.mobile}</p>
-                          <p className="ngo-details">📧 {ngo.email}</p>
-                          <p className="ngo-details">🏙️ {ngo.city}</p>
-                          <p className="ngo-contact">📅 Approved: {new Date(ngo.updated_at || Date.now()).toLocaleDateString()}</p>
+                          <h3 className="ngo-name">{req.title}</h3>
+                          <p className="ngo-details">📱 {req.description}</p>
+                          <p className="ngo-details">📧 {req.user}</p>
+                          <p className="ngo-details">🧾Amount: {req.quantity}</p>
+                          <p className="ngo-contact">📅 Registered: {req.submittedon}</p>
+                          {req.imageurl && (
+                            <img
+                              src={req.imageurl}
+                              alt="Request-Img"
+                              className="ngo-image"
+                              style={{
+                                maxWidth: '100%',
+                                height: 'auto',
+                                borderRadius: '10px',
+                                display: 'block',
+                                marginTop: '10px',
+                                objectFit: 'contain' // or 'cover' if you want cropped, uniform display
+                              }}
+                            />
+                          )}
                         </div>
                         <span className="status-badge green">Approved</span>
                       </div>
-                      <p className="ngo-address">📍 {ngo.address}</p>
-                      <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.5rem', padding: '0.75rem', marginTop: '1rem' }}>
-                        <p style={{ color: '#15803d', fontWeight: '500' }}>✅ NGO is active and can receive donations</p>
-                      </div>
+                     
                     </div>
                   ))
                 )}

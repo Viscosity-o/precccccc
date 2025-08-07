@@ -29,4 +29,10 @@ class donation(models.Model):
     ngo=models.OneToOneField(ngo,on_delete=models.CASCADE,blank=True,null=True)
     rejectionReason=models.CharField(blank=True,null=True)
 
+class notification(models.Model):
+    user=models.ForeignKey(customuser,on_delete=models.CASCADE)
+    type=models.CharField(choices=[('rejected','rejected'),('accepted','accepted'),('info','info')],default='info')
+    title=models.CharField(max_length=50,blank=True,null=True,default="New Notification")
+    message=models.TextField(blank=True,null=True)
+
 # Create your models here.

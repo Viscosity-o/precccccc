@@ -1,5 +1,5 @@
 import React from "react";
-import Navbar from "./Components/Navbar"; 
+import Navbar from "./components/Navbar"; 
 
 // Sirf Navbar import kar rahe hain
 
@@ -44,7 +44,7 @@ const router = createBrowserRouter([
   {
     path: "/admin-dashboard/:slug",
     element: <div>
-      <Navbar/>
+   
       <AdminDashboard />,
       <Footer/>
     </div>  
@@ -52,7 +52,7 @@ const router = createBrowserRouter([
   {
     path: "/ngo-dashboard/:slug",
     element: <div>
-      <Navbar/>
+     
       <NgoDashboard />,
       <Footer/>
     </div>  
