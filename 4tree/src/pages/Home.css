@@ -18,55 +18,9 @@ body {
   color: var(--text-color);
 }
 
-.navbar {
-  position: fixed;
-  top: 0;
-  width: 100%;
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--white-glow);
-  box-shadow: var(--box-shadow-glow);
-  z-index: 1000;
-  backdrop-filter: var(--glass-blur);
-  transition: background 0.3s ease, box-shadow 0.3s ease;
-}
 
-.logo-section {
-  display: flex;
-  align-items: center;
-}
 
-.logo-icon svg {
-  width: 36px;
-  height: 36px;
-  fill: var(--primary-color);
-  margin-right: 10px;
-}
 
-.logo-text {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--primary-color);
-}
-
-.nav-buttons .nav-btn {
-  margin-left: 1rem;
-  padding: 10px 20px;
-  font-weight: 600;
-  color: #fff;
-  background-color: var(--primary-color);
-  border-radius: 25px;
-  text-decoration: none;
-  box-shadow: 0 4px 20px rgba(48, 161, 78, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.nav-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 30px rgba(48, 161, 78, 0.4);
-}
 
 .hero-section {
   height: 100vh;
@@ -77,6 +31,9 @@ body {
   align-items: center;
   justify-content: center;
   text-align: center;
+  padding-top: 80px; /* match navbar height */
+  box-sizing: border-box;
+  border: 1px solid black;
 }
 
 .hero-background {

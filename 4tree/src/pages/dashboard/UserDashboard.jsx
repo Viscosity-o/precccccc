@@ -394,6 +394,7 @@ const UserDashboard = () => {
 
       {/* Navigation Bar */}
       <nav className="navbar">
+        
         <div className="navbar-content">
           <div className="navbar-inner">
             {/* Logo */}

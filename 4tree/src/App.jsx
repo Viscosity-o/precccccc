@@ -1,61 +1,72 @@
 import React from "react";
-import Navbar from "./components/Navbar"; 
-
-// Sirf Navbar import kar rahe hain
-
-
+import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
-import Footer  from "./components/Footer";
-import ReactDOM from "react-dom/client";
-import { createBrowserRouter,RouterProvider } from "react-router-dom";
+import Footer from "./components/Footer";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import UserDashboard from "./pages/dashboard/UserDashboard";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import NgoDashboard from "./pages/dashboard/NgoDashboard";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup"
+import Signup from "./pages/Signup";
+import "./App.css";
 
+// Define routes
 const router = createBrowserRouter([
   {
     path: "/",
-    element:
-    <div>
-      <Navbar/>
-      <Home />,
-      <Footer/>
-    </div>  
-    
+    element: (
+      <>
+        {/* Navbar only for Home page */}
+        <Navbar />
+        <div className="home-container">
+          <Home />
+        </div>
+        <Footer />
+      </>
+    ),
   },
   {
     path: "/login",
-    element: <Login />,
+    element: (
+      <>
+        <Login />
+      </>
+    ),
   },
   {
     path: "/signup",
-    element: <Signup />,
+    element: (
+      <>
+        <Signup />
+      </>
+    ),
   },
   {
     path: "/dashboard/:slug",
-    element:<div>
-      
-      <UserDashboard />,
-      <Footer/>
-    </div>  
+    element: (
+      <>
+       <UserDashboard />
+        <Footer />
+      </>
+    ),
   },
   {
     path: "/admin-dashboard/:slug",
-    element: <div>
-   
-      <AdminDashboard />,
-      <Footer/>
-    </div>  
+    element: (
+      <>
+        <AdminDashboard />
+        <Footer />
+      </>
+    ),
   },
   {
     path: "/ngo-dashboard/:slug",
-    element: <div>
-     
-      <NgoDashboard />,
-      <Footer/>
-    </div>  
+    element: (
+      <>
+        <NgoDashboard />
+        <Footer />
+      </>
+    ),
   },
   {
     path: "*",
@@ -63,16 +74,10 @@ const router = createBrowserRouter([
   },
 ]);
 
-
-
-
 function App() {
   return (
-
-    
     <div>
-      <RouterProvider router={router}/>
-      
+      <RouterProvider router={router} />
     </div>
   );
 }

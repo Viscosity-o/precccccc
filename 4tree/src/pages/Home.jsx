@@ -68,7 +68,7 @@ const HeroSection = () => {
         <h2 className="worker-section-title">Meet Our Ground Heroes</h2>
         <div className="worker-card-container">
           <div className="worker-card">
-            <img src="/images/worker1.jpg" alt="NGO Worker 1" />
+            <img src="" alt="NGO Worker 1" />
             <h3>Food Distribution</h3>
             <p>Helping the needy with nutritious meals across villages and cities.</p>
           </div>

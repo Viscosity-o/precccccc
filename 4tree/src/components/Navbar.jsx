@@ -30,25 +30,25 @@ const Navbar = () => {
   }, []);
 
   // Scroll effect
-  React.useEffect(() => {
-    const handleScroll = () => {
-      const navbar = document.querySelector(".navbar");
-      if (window.scrollY > 50) {
-        navbar.style.background = "rgba(255, 255, 255, 0.95)";
-        navbar.style.boxShadow = "0 12px 40px rgba(0, 0, 0, 0.15)";
-      } else {
-        navbar.style.background = "rgba(255, 255, 255, 0.85)";
-        navbar.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.1)";
-      }
-    };
+  // React.useEffect(() => {
+  //   const handleScroll = () => {
+  //     const navbar = document.querySelector(".navbar");
+  //     if (window.scrollY > 50) {
+  //       navbar.style.background = "rgba(255, 255, 255, 0.95)";
+  //       navbar.style.boxShadow = "0 12px 40px rgba(0, 0, 0, 0.15)";
+  //     } else {
+  //       navbar.style.background = "rgba(255, 255, 255, 0.85)";
+  //       navbar.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.1)";
+  //     }
+  //   };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  //   window.addEventListener("scroll", handleScroll);
+  //   return () => window.removeEventListener("scroll", handleScroll);
+  // }, []);
 
   return (
     <>
-      <nav className="navbar">
+      <nav className="navbar" style={{ background:"white"}}>
         <div className="logo-section">
           <div className="logo-icon">
             <svg viewBox="0 0 24 24">
